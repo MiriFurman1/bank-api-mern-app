@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getPlants } from "../controllers/controllers.js";
+import { getPlants,addPlants } from "../controllers/controllers.js";
 
 const indexRouter=Router()
 
 
-indexRouter.get('/getallplants',getPlants)
-
+indexRouter.get('/plants',getPlants)
+indexRouter.post('/plants/add',addPlants)
 export {indexRouter}

@@ -91,39 +91,40 @@ export const withdrawMoney = async (req, res) => {
         res.status(404).send({ message: error.message });
     }
 }
-// export const withdrawMoney1=async(id, moneyToWithdraw) =>{
-//     const accounts = loadAccounts();
-//     if (parseInt(moneyToWithdraw.withdraw) != (moneyToWithdraw.withdraw)) {
-//         throw new Error("no letters allowed in the withdraw field")
-//     }
 
-//     if (moneyToWithdraw.withdraw < 0) {
-//         throw new Error("Can withdraw only positive number");
-//     }
-//     const foundAccount = accounts.find((a) => {
-//         return a.id === id;
-//     });
-//     if (!foundAccount) {
-//         throw new Error("The account does not exist, cannot update!");
-//     }
-//     if (parseInt(moneyToWithdraw.withdraw) < 0) {
-//         throw new Error("Can withdraw only positive number");
-//     }
-//     if (parseInt(moneyToWithdraw.withdraw) > parseInt(foundAccount.cash) + parseInt(foundAccount.credit)) {
-//         throw new Error("Can withdraw only less than cash+credit");
-//     }
-//     let updatedCash = parseInt(foundAccount.cash) - parseInt(moneyToWithdraw.withdraw);
-//     const updatedAccount = {
-//         ...foundAccount,
-//         cash: updatedCash
-//     };
-//     const index = accounts.findIndex((a) => a.id === id);
-//     accounts[index] = updatedAccount;
-//     saveAccounts(accounts);
-//     return updatedAccount;
-// }
+export const transferMoney = async (req, res) => {
+    const { withdrawId, depositId, amount } = req.body;
+    try {
+        if ( amount < 0) {
+            throw new Error("Can deposit only positive number");
+        }
+        const withdrawAccount = await Account.findById(withdrawId);
+        if (!withdrawAccount) {
+            throw new Error("no user to withdraw found")
+        }
+        const depositAccount = await Account.findById(depositId);
+        if (!depositAccount) {
+            throw new Error("no user to withdraw found")
+        }
 
-function transferMoney(idToWithdraw, idToDeposit, amount) {
+        if (withdrawAccount .cash + withdrawAccount.credit < amount) {
+            throw new Error("can't transfer more money than you have")
+        }
+        const result = await Account.updateOne(withdrawAccount,
+            { $inc: { cash: -amount } }
+        );
+        const result2 = await Account.updateOne(depositAccount,
+            { $inc: { cash: amount } }
+        );
+        res.status(200).send("transfer succeeded");
+
+    } catch (error) {
+        res.status(404).send({ message: error.message });
+    }
+}
+
+
+function transferMoney1(idToWithdraw, idToDeposit, amount) {
     const accounts = loadAccounts();
     // console.log(idToDeposit);
     const withdrawAccount = accounts.find((a) => {
@@ -151,31 +152,27 @@ function transferMoney(idToWithdraw, idToDeposit, amount) {
     return "transfer succeeded"
 }
 
-function updateCredit(id, credit) {
-    const accounts = loadAccounts();
-    if (parseInt(credit.credit) != (credit.credit)) {
-        throw new Error("no letters allowed in the credit field")
-    }
-    const foundAccount = accounts.find((a) => {
-        return a.id === id;
-    });
-    if (!foundAccount) {
-        throw new Error("The account does not exist, cannot update!");
-    }
-    if (credit.credit < 0) {
-        throw new Error("credit can be positive number");
-    }
 
-    const updatedAccount = {
-        ...foundAccount,
-        credit: credit.credit
-    };
-    const index = accounts.findIndex((a) => a.id === id);
-    accounts[index] = updatedAccount;
-    saveAccounts(accounts);
-    return updatedAccount;
+export const updateCredit = async (req, res) => {
+    const newCredit = req.body.newCredit;
+    const { id } = req.params;
+    try {
+        if (newCredit < 0) {
+            throw new Error("Credit can be only positive number");
+        }
+        const account = await Account.findById(id);
+        if (!account) {
+            throw new Error("no user found")
+        }
+
+        const result = await Account.updateOne(account,
+            { credit: newCredit }
+        );
+        res.status(200).send(account);
+
+    } catch (error) {
+        res.status(404).send({ message: error.message });
+    }
 }
-
-
 
 
